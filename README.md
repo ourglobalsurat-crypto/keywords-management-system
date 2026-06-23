@@ -61,23 +61,30 @@ git remote add origin <YOUR_GITHUB_REPO_URL>
 git push -u origin main
 ```
 
-## 4. Deploy on Vercel
+## 4. Deploy on Vercel — fastest path (no env vars to type)
 
-1. Go to **https://vercel.com** → **Add New… → Project** → import your GitHub repo.
-2. Before deploying, open **Environment Variables** and add:
+1. Go to **https://vercel.com** → sign in with GitHub → **Add New… → Project** → import
+   `keywords-management-system`. Click **Deploy** (the first build may warn about the
+   database — that's expected; we add it next).
+2. In the project, open the **Storage** tab → **Create Database** → **Neon (Postgres)** →
+   follow the prompts. This **auto-creates the database and sets the connection variable**
+   for you — no copy-paste.
+3. Open **Settings → Environment Variables** and add one value for security:
 
-   | Name              | Value                                              |
-   | ----------------- | -------------------------------------------------- |
-   | `DATABASE_URL`    | your Neon **pooled** connection string             |
-   | `SESSION_SECRET`  | a long random string                               |
-   | `CLIENT_PASSWORD` | `Khushan@007` (or a new one)                       |
-   | `AGENCY_PASSWORD` | `GlobalSurat@007` (or a new one)                   |
+   | Name             | Value                          |
+   | ---------------- | ------------------------------ |
+   | `SESSION_SECRET` | any long random string         |
 
-   > Tip: you can also add the **Neon** integration from the Vercel Marketplace, which sets `DATABASE_URL` for you. If it sets a different variable name, copy its value into `DATABASE_URL`.
+   (Optional: `CLIENT_PASSWORD` / `AGENCY_PASSWORD` to change the logins — otherwise the
+   defaults `Khushan@007` / `GlobalSurat@007` are used.)
+4. **Deployments → … → Redeploy**. Done — visit the URL and sign in.
 
-3. Click **Deploy**. Done.
+The app reads any of `DATABASE_URL`, `POSTGRES_URL`, etc., so whatever the Neon
+integration names its variable, it just works. All tables self-create on first use, and
+because data lives in Neon Postgres, **nothing resets on redeploy**.
 
-Because all data lives in Neon Postgres, **nothing resets on redeploy** — your keywords and activity log persist permanently.
+> **Currency:** the app uses **Canadian dollars (CA$)** by default in the Ads Suggestions
+> reports. If a Google Ads export contains an explicit currency symbol, that symbol is used.
 
 ---
 

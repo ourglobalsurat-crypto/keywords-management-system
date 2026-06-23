@@ -22,7 +22,16 @@ declare global {
 }
 
 function createClient(): Sql {
-  const url = process.env.DATABASE_URL;
+  // Accept whichever variable name the host/integration provides. The Vercel
+  // Neon integration may set DATABASE_URL or POSTGRES_URL, etc. — so a plain
+  // "Add Neon" in the Vercel dashboard wires the app up with no manual step.
+  const url =
+    process.env.DATABASE_URL ||
+    process.env.POSTGRES_URL ||
+    process.env.POSTGRES_PRISMA_URL ||
+    process.env.NEON_DATABASE_URL ||
+    process.env.DATABASE_URL_UNPOOLED ||
+    process.env.POSTGRES_URL_NON_POOLING;
   if (!url) {
     throw new Error(
       "DATABASE_URL is not set. Create a Neon database and add the pooled " +

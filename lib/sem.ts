@@ -265,15 +265,20 @@ function num(row: Record<string, string>, names: string[]): number {
   return parseNum(pick(row, names));
 }
 
+// Account currency is Canadian dollars; default to CA$ when the export
+// doesn't carry an explicit symbol. If Google Ads does include a symbol
+// (e.g. "CA$"), we use exactly what's in the file.
+const DEFAULT_CURRENCY = "CA$";
+
 function detectCurrency(datasets: Record<string, Dataset>): string {
   const ds = datasets.campaigns || datasets.search_keywords || datasets.devices;
-  if (!ds) return "$";
+  if (!ds) return DEFAULT_CURRENCY;
   for (const r of ds.rows) {
     const raw = pick(r, ["cost"]);
     const m = raw.match(/([^\d.,\s\-]+)/);
-    if (m) return m[1];
+    if (m) return m[1].trim();
   }
-  return "$";
+  return DEFAULT_CURRENCY;
 }
 
 /* ───────────────────────── metric extraction ───────────────────────── */
