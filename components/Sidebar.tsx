@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import type { SessionUser } from "@/lib/auth";
 import { RoleBadge } from "./Badges";
+import { MedallionFenceMark, MadeByGlobalSurat } from "./logos";
 import {
   IconDashboard,
   IconKey,
@@ -27,15 +28,7 @@ const NAV = [
 ];
 
 function Logo({ small }: { small?: boolean }) {
-  return (
-    <span
-      className={`flex items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-sm ${
-        small ? "h-8 w-8" : "h-9 w-9"
-      }`}
-    >
-      <IconKey className="h-5 w-5" />
-    </span>
-  );
+  return <MedallionFenceMark className={small ? "h-8 w-auto" : "h-10 w-auto"} />;
 }
 
 export default function Sidebar({ user }: { user: SessionUser }) {
@@ -58,7 +51,7 @@ export default function Sidebar({ user }: { user: SessionUser }) {
       <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 lg:hidden">
         <div className="flex items-center gap-2.5">
           <Logo small />
-          <span className="font-semibold text-slate-900">Keyword Manager</span>
+          <span className="font-semibold text-slate-900">Medallion Fence</span>
         </div>
         <button
           className="btn-ghost px-2 py-2"
@@ -79,9 +72,9 @@ export default function Sidebar({ user }: { user: SessionUser }) {
             <Logo />
             <div>
               <div className="text-sm font-bold leading-tight text-slate-900">
-                Keyword Manager
+                Medallion Fence
               </div>
-              <div className="text-xs text-slate-400">Google Ads</div>
+              <div className="text-xs text-slate-400">Keyword Manager</div>
             </div>
           </div>
 
@@ -128,6 +121,7 @@ export default function Sidebar({ user }: { user: SessionUser }) {
               <IconLogout className="h-4 w-4" />
               Sign out
             </button>
+            <MadeByGlobalSurat className="mt-4" />
           </div>
         </div>
       </aside>

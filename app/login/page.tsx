@@ -2,7 +2,7 @@
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { IconKey } from "@/components/icons";
+import { MedallionFenceLogo, MadeByGlobalSurat } from "@/components/logos";
 
 export default function LoginPage() {
   return (
@@ -49,10 +49,8 @@ function LoginForm() {
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-100 via-white to-brand-50 px-4">
       <div className="w-full max-w-md">
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-md">
-            <IconKey className="h-6 w-6" />
-          </div>
-          <h1 className="text-2xl font-bold text-slate-900">
+          <MedallionFenceLogo className="mb-4" />
+          <h1 className="text-xl font-bold text-slate-900">
             Keyword Management System
           </h1>
           <p className="mt-1 text-sm text-slate-500">
@@ -96,6 +94,7 @@ function LoginForm() {
         <p className="mt-6 text-center text-xs text-slate-400">
           Authorised access only · Client &amp; Agency accounts
         </p>
+        <MadeByGlobalSurat className="mt-4" />
       </div>
     </div>
   );
