@@ -11,6 +11,7 @@ import type { Keyword } from "@/lib/types";
 import { StatusBadge, RoleBadge } from "./Badges";
 import { Modal } from "./Modal";
 import { toast } from "./Toast";
+import { IconPlus } from "./icons";
 
 const EMPTY_FORM = {
   campaign: "",
@@ -162,7 +163,8 @@ export default function KeywordsClient({ role }: { role: Role }) {
           </p>
         </div>
         <button className="btn-primary" onClick={openAdd}>
-          + Add keyword
+          <IconPlus className="h-4 w-4" />
+          Add keyword
         </button>
       </header>
 

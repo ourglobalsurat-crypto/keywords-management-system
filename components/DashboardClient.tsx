@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { ActivityEntry } from "@/lib/types";
 import { RoleBadge } from "./Badges";
+import { IconKey, IconImportExport, IconBan, IconChevronRight } from "./icons";
 
 type Stats = {
   keywords: {
@@ -53,7 +54,7 @@ export default function DashboardClient({ name }: { name: string }) {
     <div>
       <header className="mb-6">
         <h1 className="text-2xl font-bold text-slate-900">
-          Welcome back{name ? `, ${name}` : ""} 👋
+          Welcome back{name ? `, ${name}` : ""}
         </h1>
         <p className="text-sm text-slate-500">
           Here’s the current state of your Google Ads keywords.
@@ -105,8 +106,12 @@ export default function DashboardClient({ name }: { name: string }) {
               {stats?.changesByRole.agency ?? "—"}
             </span>
           </div>
-          <Link href="/activity" className="mt-3 inline-block text-sm text-brand-600 hover:underline">
-            View full activity log →
+          <Link
+            href="/activity"
+            className="mt-3 inline-flex items-center gap-0.5 text-sm font-medium text-brand-600 hover:text-brand-700"
+          >
+            View full activity log
+            <IconChevronRight className="h-4 w-4" />
           </Link>
         </div>
 
@@ -114,13 +119,16 @@ export default function DashboardClient({ name }: { name: string }) {
           <h3 className="mb-3 text-sm font-semibold text-slate-700">Quick actions</h3>
           <div className="space-y-2">
             <Link href="/keywords" className="btn-secondary w-full justify-start">
-              🔑 Manage keywords
+              <IconKey className="h-4 w-4 text-slate-400" />
+              Manage keywords
             </Link>
             <Link href="/import" className="btn-secondary w-full justify-start">
-              ↕ Import / export
+              <IconImportExport className="h-4 w-4 text-slate-400" />
+              Import / export
             </Link>
             <Link href="/negatives" className="btn-secondary w-full justify-start">
-              ⛔ Negative keywords
+              <IconBan className="h-4 w-4 text-slate-400" />
+              Negative keywords
             </Link>
           </div>
         </div>
@@ -130,8 +138,12 @@ export default function DashboardClient({ name }: { name: string }) {
       <div className="card mt-4 p-5">
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-sm font-semibold text-slate-700">Recent activity</h3>
-          <Link href="/activity" className="text-sm text-brand-600 hover:underline">
-            See all →
+          <Link
+            href="/activity"
+            className="inline-flex items-center gap-0.5 text-sm font-medium text-brand-600 hover:text-brand-700"
+          >
+            See all
+            <IconChevronRight className="h-4 w-4" />
           </Link>
         </div>
         {!stats ? (

@@ -7,6 +7,7 @@ import type { NegativeKeyword } from "@/lib/types";
 import { RoleBadge } from "./Badges";
 import { Modal } from "./Modal";
 import { toast } from "./Toast";
+import { IconPlus } from "./icons";
 
 const EMPTY = {
   category: "",
@@ -104,7 +105,8 @@ export default function NegativesClient({ role }: { role: Role }) {
           </p>
         </div>
         <button className="btn-primary" onClick={() => setAddOpen(true)}>
-          + Add negative
+          <IconPlus className="h-4 w-4" />
+          Add negative
         </button>
       </header>
 

@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { toast } from "./Toast";
+import { IconUpload, IconDownload, IconSpreadsheet } from "./icons";
 
 type Summary = {
   sheetsFound: string[];
@@ -108,6 +109,7 @@ export default function ImportExportClient() {
               className="hidden"
               onChange={(e) => onPickFile(e.target.files?.[0] ?? null)}
             />
+            <IconUpload className="mb-2 h-7 w-7 text-slate-400" />
             <p className="mb-2 text-sm text-slate-500">
               {file ? file.name : "Drag & drop your Excel file here, or"}
             </p>
@@ -174,28 +176,44 @@ export default function ImportExportClient() {
           <div className="space-y-3">
             <a
               href="/api/export?format=googleads-csv"
-              className="flex items-center justify-between rounded-lg border border-slate-200 p-4 hover:bg-slate-50"
+              className="flex items-center justify-between rounded-lg border border-slate-200 p-4 transition hover:border-brand-200 hover:bg-slate-50"
             >
-              <div>
-                <div className="font-medium text-slate-800">Google Ads Editor CSV</div>
-                <div className="text-sm text-slate-500">
-                  Ready to bulk-import into Google Ads Editor (keywords + negatives).
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
+                  <IconSpreadsheet className="h-5 w-5" />
+                </span>
+                <div>
+                  <div className="font-medium text-slate-800">Google Ads Editor CSV</div>
+                  <div className="text-sm text-slate-500">
+                    Ready to bulk-import into Google Ads Editor (keywords + negatives).
+                  </div>
                 </div>
               </div>
-              <span className="btn-primary pointer-events-none">Download</span>
+              <span className="btn-primary pointer-events-none flex-shrink-0">
+                <IconDownload className="h-4 w-4" />
+                Download
+              </span>
             </a>
 
             <a
               href="/api/export?format=xlsx"
-              className="flex items-center justify-between rounded-lg border border-slate-200 p-4 hover:bg-slate-50"
+              className="flex items-center justify-between rounded-lg border border-slate-200 p-4 transition hover:border-brand-200 hover:bg-slate-50"
             >
-              <div>
-                <div className="font-medium text-slate-800">Excel backup (.xlsx)</div>
-                <div className="text-sm text-slate-500">
-                  Full 4-sheet workbook — can be re-imported here later.
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                  <IconSpreadsheet className="h-5 w-5" />
+                </span>
+                <div>
+                  <div className="font-medium text-slate-800">Excel backup (.xlsx)</div>
+                  <div className="text-sm text-slate-500">
+                    Full 4-sheet workbook — can be re-imported here later.
+                  </div>
                 </div>
               </div>
-              <span className="btn-secondary pointer-events-none">Download</span>
+              <span className="btn-secondary pointer-events-none flex-shrink-0">
+                <IconDownload className="h-4 w-4" />
+                Download
+              </span>
             </a>
           </div>
         </section>
