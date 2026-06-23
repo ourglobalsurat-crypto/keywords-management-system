@@ -130,6 +130,38 @@ export const IconChevronRight = (p: IconProps) => (
   </Base>
 );
 
+export const IconTrash = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M3 6h18" />
+    <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
+    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+    <path d="M10 11v6" />
+    <path d="M14 11v6" />
+  </Base>
+);
+
+export const IconPencil = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M12 20h9" />
+    <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+  </Base>
+);
+
+export const IconLayers = (p: IconProps) => (
+  <Base {...p}>
+    <path d="m12 2 9 5-9 5-9-5 9-5Z" />
+    <path d="m3 12 9 5 9-5" />
+    <path d="m3 17 9 5 9-5" />
+  </Base>
+);
+
+export const IconX = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M6 6l12 12" />
+    <path d="M18 6 6 18" />
+  </Base>
+);
+
 export const IconSpreadsheet = (p: IconProps) => (
   <Base {...p}>
     <rect x="4" y="3" width="16" height="18" rx="2" />
