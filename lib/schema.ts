@@ -125,6 +125,27 @@ async function migrate() {
     CREATE INDEX IF NOT EXISTS activity_created_idx
     ON activity_log (created_at DESC)
   `;
+
+  // Google Ads "Suggestion Metrics" section — fully isolated from the rest.
+  await sql`
+    CREATE TABLE IF NOT EXISTS sem_uploads (
+      id            INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+      label         TEXT NOT NULL DEFAULT '',
+      period_start  TEXT NOT NULL DEFAULT '',
+      period_end    TEXT NOT NULL DEFAULT '',
+      file_count    INT NOT NULL DEFAULT 0,
+      health_score  INT NOT NULL DEFAULT 0,
+      uploaded_by   TEXT NOT NULL DEFAULT '',
+      uploaded_role TEXT NOT NULL DEFAULT '',
+      report        JSONB NOT NULL DEFAULT '{}'::jsonb,
+      created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+    )
+  `;
+
+  await sql`
+    CREATE INDEX IF NOT EXISTS sem_created_idx
+    ON sem_uploads (created_at DESC)
+  `;
 }
 
 export function ensureSchema(): Promise<void> {

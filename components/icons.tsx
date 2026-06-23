@@ -162,6 +162,37 @@ export const IconX = (p: IconProps) => (
   </Base>
 );
 
+export const IconSparkles = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M12 3l1.8 4.6L18.5 9l-4.7 1.4L12 15l-1.8-4.6L5.5 9l4.7-1.4L12 3Z" />
+    <path d="M19 14l.9 2.3L22 17l-2.1.7L19 20l-.9-2.3L16 17l2.1-.7L19 14Z" />
+  </Base>
+);
+
+export const IconChart = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M3 3v18h18" />
+    <rect x="7" y="11" width="3" height="6" rx="0.5" />
+    <rect x="12" y="7" width="3" height="10" rx="0.5" />
+    <rect x="17" y="13" width="3" height="4" rx="0.5" />
+  </Base>
+);
+
+export const IconAlert = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M10.3 3.6 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.6a2 2 0 0 0-3.4 0Z" />
+    <path d="M12 9v4" />
+    <path d="M12 17h.01" />
+  </Base>
+);
+
+export const IconCheckCircle = (p: IconProps) => (
+  <Base {...p}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="m8.5 12 2.5 2.5 4.5-5" />
+  </Base>
+);
+
 export const IconSpreadsheet = (p: IconProps) => (
   <Base {...p}>
     <rect x="4" y="3" width="16" height="18" rx="2" />

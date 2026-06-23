@@ -13,6 +13,7 @@ import {
   IconMapPin,
   IconActivity,
   IconImportExport,
+  IconSparkles,
   IconMenu,
   IconClose,
   IconLogout,
@@ -23,6 +24,7 @@ const NAV = [
   { href: "/keywords", label: "Keywords", Icon: IconKey },
   { href: "/negatives", label: "Negative Keywords", Icon: IconBan },
   { href: "/geo-seeds", label: "Geo & Seeds", Icon: IconMapPin },
+  { href: "/suggestions", label: "Ads Suggestions", Icon: IconSparkles },
   { href: "/activity", label: "Activity Log", Icon: IconActivity },
   { href: "/import", label: "Import / Export", Icon: IconImportExport },
 ];
