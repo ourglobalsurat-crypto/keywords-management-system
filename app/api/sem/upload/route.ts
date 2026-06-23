@@ -4,48 +4,64 @@ import { ensureSchema } from "@/lib/schema";
 import { requireSession } from "@/lib/auth";
 import { logActivity } from "@/lib/audit";
 import { jsonError } from "@/lib/http";
-import { parseGoogleAdsZip, analyzeGoogleAds } from "@/lib/sem";
+import { parseUploadFiles, analyzeGoogleAds } from "@/lib/sem";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-// POST /api/sem/upload  → accepts the Google Ads "Download cards data" ZIP,
-// parses + analyses it, stores the report, returns it.
+const ALLOWED = [".zip", ".rar", ".csv", ".tsv", ".txt"];
+
+// POST /api/sem/upload  → accepts one or more Google Ads files (.zip / .rar /
+// .csv), extracts + parses + analyses them together, stores the report.
 export async function POST(req: Request) {
   try {
     const user = await requireSession();
     await ensureSchema();
 
     const formData = await req.formData();
-    const file = formData.get("file");
-    if (!(file instanceof File))
-      return NextResponse.json({ error: "No file uploaded." }, { status: 400 });
+    const uploaded = [
+      ...formData.getAll("files"),
+      ...formData.getAll("file"),
+    ].filter((f): f is File => f instanceof File);
 
-    const name = file.name.toLowerCase();
-    if (!name.endsWith(".zip"))
+    if (uploaded.length === 0)
+      return NextResponse.json({ error: "No files uploaded." }, { status: 400 });
+
+    const bad = uploaded.find(
+      (f) => !ALLOWED.some((ext) => f.name.toLowerCase().endsWith(ext))
+    );
+    if (bad)
       return NextResponse.json(
-        { error: "Please upload the .zip file you downloaded from Google Ads (Download → CSV)." },
+        { error: `Unsupported file “${bad.name}”. Upload .zip, .rar, or .csv files.` },
         { status: 400 }
       );
 
-    const buf = Buffer.from(await file.arrayBuffer());
+    const files = await Promise.all(
+      uploaded.map(async (f) => ({
+        name: f.name,
+        data: new Uint8Array(await f.arrayBuffer()),
+      }))
+    );
 
     let report;
+    let warnings: string[] | undefined;
     try {
-      const parsed = await parseGoogleAdsZip(buf);
+      const parsed = await parseUploadFiles(files);
+      warnings = parsed.warnings;
       if (Object.keys(parsed.datasets).length === 0)
         return NextResponse.json(
           {
             error:
-              "No recognisable Google Ads reports were found in that ZIP. Make sure it's the 'Download cards data' export (it should contain files like Campaigns, Search_keywords, Searches, Devices, etc.).",
+              "No recognisable Google Ads reports were found. Upload the 'Download cards data' ZIP/RAR (Campaigns, Search_keywords, Searches, Devices, etc.) or the individual CSVs.",
+            warnings: parsed.warnings,
           },
           { status: 400 }
         );
       report = analyzeGoogleAds(parsed);
     } catch (err) {
       return NextResponse.json(
-        { error: "Could not read that ZIP file. Please re-download and try again." },
+        { error: "Could not read those files. Please re-export and try again." },
         { status: 400 }
       );
     }
@@ -78,7 +94,7 @@ export async function POST(req: Request) {
       },
     });
 
-    return NextResponse.json({ id: inserted[0].id, report });
+    return NextResponse.json({ id: inserted[0].id, report, warnings });
   } catch (e) {
     return jsonError(e);
   }

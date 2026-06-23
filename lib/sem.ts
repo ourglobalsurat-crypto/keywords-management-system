@@ -190,7 +190,56 @@ export type ParsedZip = {
   filesFound: string[];
   period: { start: string; end: string; label: string };
   currency: string;
+  warnings?: string[];
 };
+
+// When a loose CSV's filename doesn't reveal its report type, infer it from
+// the column headers instead.
+function classifyByHeaders(headers: string[]): string {
+  const h = headers.map(norm);
+  const has = (t: string) => h.some((x) => x.includes(t));
+  if (has("display url domain")) return "auction_compare";
+  if (has("search term")) return "search_terms";
+  if (has("search keyword")) return "search_keywords";
+  if (has("hour of the day")) return "hour";
+  if (has("day of the week")) return "day";
+  if (has("age range") || (has("age") && !has("campaign"))) return "age";
+  if (has("gender")) return "gender";
+  if (has("device")) return "devices";
+  if (has("campaign")) return "campaigns";
+  if (has("keyword")) return "search_keywords";
+  return "unknown";
+}
+
+// Decode + classify + parse a single file's bytes, merging its rows into the
+// accumulating dataset map.
+function ingest(datasets: Record<string, Dataset>, fileName: string, u8: Uint8Array): void {
+  const text = decodeBuffer(u8);
+  let type = classify(fileName);
+  const ds = toDataset(type, fileName, text);
+  if (!ds || ds.rows.length === 0) return;
+  if (type === "unknown") {
+    type = classifyByHeaders(ds.headers);
+    if (type === "unknown") return;
+    ds.type = type;
+  }
+  if (datasets[type]) datasets[type].rows.push(...ds.rows);
+  else datasets[type] = ds;
+}
+
+function finalize(
+  datasets: Record<string, Dataset>,
+  filesFound: string[],
+  warnings: string[]
+): ParsedZip {
+  return {
+    datasets,
+    filesFound,
+    period: extractPeriod(filesFound),
+    currency: detectCurrency(datasets),
+    warnings: warnings.length ? warnings : undefined,
+  };
+}
 
 // Extract a YYYY.MM.DD-YYYY.MM.DD style range from a filename if present.
 function extractPeriod(names: string[]): { start: string; end: string; label: string } {
@@ -204,33 +253,96 @@ function extractPeriod(names: string[]): { start: string; end: string; label: st
   return { start: "", end: "", label: "" };
 }
 
-export async function parseGoogleAdsZip(buffer: Buffer | ArrayBuffer): Promise<ParsedZip> {
-  const zip = await JSZip.loadAsync(buffer);
+// Extract a RAR archive using the WASM-based unrar (works on Vercel).
+async function loadUnrarWasm(): Promise<ArrayBuffer | undefined> {
+  try {
+    const { createRequire } = await import("module");
+    const req = createRequire(import.meta.url);
+    const fs = await import("fs");
+    const p = req.resolve("node-unrar-js/dist/js/unrar.wasm");
+    const buf = fs.readFileSync(p);
+    return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+  } catch {
+    return undefined;
+  }
+}
+
+export async function extractRar(data: Uint8Array): Promise<{ name: string; data: Uint8Array }[]> {
+  const mod = await import("node-unrar-js");
+  const ab = new Uint8Array(data).buffer; // fresh, tightly-bound ArrayBuffer
+  let extractor;
+  try {
+    extractor = await mod.createExtractorFromData({ data: ab });
+  } catch {
+    const wasmBinary = await loadUnrarWasm();
+    extractor = await mod.createExtractorFromData({ data: ab, wasmBinary });
+  }
+  const result = extractor.extract();
+  const files: { name: string; data: Uint8Array }[] = [];
+  for (const f of result.files) {
+    if (f.fileHeader.flags.directory) continue;
+    if (f.extraction) files.push({ name: f.fileHeader.name, data: f.extraction });
+  }
+  return files;
+}
+
+// Parse any mix of uploaded files — .zip, .rar, and loose .csv/.tsv — and
+// merge everything into one dataset map for analysis.
+export async function parseUploadFiles(
+  files: { name: string; data: Uint8Array }[]
+): Promise<ParsedZip> {
   const datasets: Record<string, Dataset> = {};
   const filesFound: string[] = [];
+  const warnings: string[] = [];
 
-  const entries = Object.values(zip.files).filter((f) => !f.dir);
-  for (const entry of entries) {
-    const name = entry.name.split("/").pop() || entry.name;
-    filesFound.push(name);
+  for (const file of files) {
+    const lower = file.name.toLowerCase();
     try {
-      const u8 = await entry.async("uint8array");
-      const text = decodeBuffer(u8);
-      const type = classify(name);
-      const ds = toDataset(type, name, text);
-      if (ds && ds.rows.length > 0) {
-        // keep first occurrence per type (or merge if duplicate type by appending)
-        if (datasets[type]) datasets[type].rows.push(...ds.rows);
-        else datasets[type] = ds;
+      if (lower.endsWith(".zip")) {
+        const zip = await JSZip.loadAsync(file.data);
+        for (const entry of Object.values(zip.files)) {
+          if (entry.dir) continue;
+          const nm = entry.name.split("/").pop() || entry.name;
+          filesFound.push(nm);
+          try {
+            ingest(datasets, nm, await entry.async("uint8array"));
+          } catch {
+            /* skip bad entry */
+          }
+        }
+      } else if (lower.endsWith(".rar")) {
+        try {
+          const entries = await extractRar(file.data);
+          for (const e of entries) {
+            const nm = e.name.split("/").pop() || e.name;
+            filesFound.push(nm);
+            try {
+              ingest(datasets, nm, e.data);
+            } catch {
+              /* skip bad entry */
+            }
+          }
+        } catch {
+          warnings.push(
+            `Couldn't read “${file.name}”. If RAR extraction fails, re-save it as a .zip or add the .csv files directly.`
+          );
+        }
+      } else {
+        // treat as a loose CSV/TSV
+        filesFound.push(file.name);
+        ingest(datasets, file.name, file.data);
       }
     } catch {
-      /* skip unreadable entry */
+      warnings.push(`Couldn't read “${file.name}”.`);
     }
   }
 
-  const period = extractPeriod(filesFound);
-  const currency = detectCurrency(datasets);
-  return { datasets, filesFound, period, currency };
+  return finalize(datasets, filesFound, warnings);
+}
+
+// Back-compat: analyse a single ZIP buffer.
+export async function parseGoogleAdsZip(buffer: Buffer | ArrayBuffer): Promise<ParsedZip> {
+  return parseUploadFiles([{ name: "upload.zip", data: new Uint8Array(buffer as ArrayBuffer) }]);
 }
 
 /* ───────────────────────── value helpers ───────────────────────── */

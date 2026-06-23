@@ -61,17 +61,22 @@ export default function SuggestionsClient({ role }: { role: Role }) {
     load();
   }, [load]);
 
-  async function onUpload(file: File | null) {
-    if (!file) return;
+  async function onUpload(fileList: FileList | File[] | null) {
+    const files = fileList ? Array.from(fileList) : [];
+    if (files.length === 0) return;
     setBusy(true);
     try {
       const fd = new FormData();
-      fd.append("file", file);
+      files.forEach((f) => fd.append("files", f));
       const res = await fetch("/api/sem/upload", { method: "POST", body: fd });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Upload failed");
+      if (!res.ok) {
+        (data.warnings || []).forEach((w: string) => toast(w, "error"));
+        throw new Error(data.error || "Upload failed");
+      }
       setReport(data.report);
-      toast("Analysis complete", "success");
+      (data.warnings || []).forEach((w: string) => toast(w, "info"));
+      toast(`Analysis complete · ${files.length} file${files.length === 1 ? "" : "s"}`, "success");
       load();
     } catch (e) {
       toast(e instanceof Error ? e.message : "Upload failed", "error");
@@ -122,9 +127,11 @@ export default function SuggestionsClient({ role }: { role: Role }) {
             Ads Suggestions
           </h1>
           <p className="max-w-2xl text-sm text-slate-500">
-            Upload the ZIP you download from Google Ads (Overview → “Download cards data”).
-            We analyse every report and produce an expert, prioritized optimization plan.
-            This section is fully separate — nothing here mixes with your keyword lists.
+            Upload what you download from Google Ads (Overview → “Download cards data”) — a{" "}
+            <strong>.zip</strong> or <strong>.rar</strong>, plus any extra <strong>.csv</strong>{" "}
+            files you want to add. We analyse everything together and produce an expert,
+            prioritized optimization plan. This section is fully separate — nothing here mixes
+            with your keyword lists.
           </p>
         </div>
         {report && (
@@ -147,22 +154,29 @@ export default function SuggestionsClient({ role }: { role: Role }) {
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => {
           e.preventDefault();
-          onUpload(e.dataTransfer.files?.[0] ?? null);
+          onUpload(e.dataTransfer.files);
         }}
       >
         <input
           ref={inputRef}
           type="file"
-          accept=".zip"
+          accept=".zip,.rar,.csv,.tsv"
+          multiple
           className="hidden"
-          onChange={(e) => onUpload(e.target.files?.[0] ?? null)}
+          onChange={(e) => onUpload(e.target.files)}
         />
         <IconUpload className="mb-2 h-7 w-7 text-slate-400" />
-        <p className="mb-2 text-sm text-slate-500">
-          {busy ? "Analysing your Google Ads data…" : "Drag & drop your Google Ads .zip here, or"}
+        <p className="mb-1 text-sm text-slate-500">
+          {busy
+            ? "Analysing your Google Ads data…"
+            : "Drag & drop your Google Ads files here, or"}
+        </p>
+        <p className="mb-3 text-xs text-slate-400">
+          Accepts <strong>.zip</strong>, <strong>.rar</strong>, and individual{" "}
+          <strong>.csv</strong> files — select several at once to combine them.
         </p>
         <button className="btn-primary" onClick={() => inputRef.current?.click()} disabled={busy}>
-          {busy ? "Working…" : report ? "Upload new export" : "Choose ZIP file"}
+          {busy ? "Working…" : report ? "Upload more files" : "Choose files"}
         </button>
       </div>
 
